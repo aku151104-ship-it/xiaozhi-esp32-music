@@ -27,8 +27,11 @@ jobs:
         run: |
           . ~/esp-idf/export.sh
           echo 'CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM=y' >> sdkconfig.defaults
+          echo 'CONFIG_LCD_ST7789_240X320=y' >> sdkconfig.defaults
           idf.py set-target esp32s3
           idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3" build
+          echo "=== Build output files ==="
+          ls -lh build/*.bin build/bootloader/*.bin build/partition_table/*.bin 2>/dev/null || true
 
       - name: Upload firmware
         uses: actions/upload-artifact@v4
