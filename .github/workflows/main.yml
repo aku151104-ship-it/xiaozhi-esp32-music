@@ -12,16 +12,23 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Prepare sdkconfig
+      - name: Install ESP-IDF dependencies
         run: |
-          echo 'CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM=y' >> sdkconfig.defaults
+          sudo apt-get update
+          sudo apt-get install -y git wget flex bison gperf python3 python3-pip python3-venv cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
 
-      - name: Setup ESP-IDF
-        uses: espressif/esp-idf-ci-action@v1
-        with:
-          esp_idf_version: v5.4.1
-          target: esp32s3
-          command: idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3" build
+      - name: Clone ESP-IDF
+        run: |
+          git clone --depth 1 --branch v5.4.1 https://github.com/espressif/esp-idf.git ~/esp-idf
+          cd ~/esp-idf
+          ./install.sh esp32s3
+
+      - name: Build firmware
+        run: |
+          . ~/esp-idf/export.sh
+          echo 'CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM=y' >> sdkconfig.defaults
+          idf.py set-target esp32s3
+          idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3" build
 
       - name: Upload firmware
         uses: actions/upload-artifact@v4
