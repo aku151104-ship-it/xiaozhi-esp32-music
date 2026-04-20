@@ -31,19 +31,16 @@ jobs:
           echo 'CONFIG_USE_AFE_WAKE_WORD=y' >> sdkconfig.defaults
           idf.py set-target esp32s3
           idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3" build
-          echo "=== Build output files ==="
-          ls -lh build/*.bin build/bootloader/*.bin build/partition_table/*.bin build/srmodels/ 2>/dev/null || true
-          echo "=== flash_args ==="
-          cat build/flash_args 2>/dev/null || true
+          echo "=== All bin files ==="
+          find build -name "*.bin" | sort | xargs ls -lh 2>/dev/null || true
 
       - name: Merge binaries
         run: |
           . ~/esp-idf/export.sh
           cd build
-          echo "=== Using flash_args for merge ==="
-          cat flash_args
-          # 用 esptool merge_bin 配合 @flash_args 自动处理所有地址
-          python -m esptool --chip esp32s3 merge_bin --output merged-binary.bin @flash_args
+          echo "=== Merging with esptool ==="
+          # 用 esptool write_flash_args 找到正确的地址
+          python -m esptool --chip esp32s3 merge_bin             --output merged-binary.bin             --flash_mode dio             --flash_freq 80m             --flash_size 16MB             0x0    bootloader/bootloader.bin             0x8000 partition_table/partition-table.bin             0xd000 ota_data_initial.bin             0x10000 srmodels/srmodels.bin             0x100000 xiaozhi.bin ||           python -m esptool --chip esp32s3 merge_bin             --output merged-binary.bin             --flash_mode dio             --flash_freq 80m             --flash_size 16MB             0x0    bootloader/bootloader.bin             0x8000 partition_table/partition-table.bin             0xd000 ota_data_initial.bin             0x100000 xiaozhi.bin
           echo "=== Merged binary size ==="
           ls -lh merged-binary.bin
 
