@@ -30,16 +30,33 @@ jobs:
           echo 'CONFIG_LCD_ST7789_240X320=y' >> sdkconfig.defaults
           idf.py set-target esp32s3
           idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3" build
-          echo "=== Build output files ==="
-          ls -lh build/*.bin build/bootloader/*.bin build/partition_table/*.bin 2>/dev/null || true
+
+      - name: Merge binaries
+        run: |
+          . ~/esp-idf/export.sh
+          cd build
+          echo "=== Files in build ==="
+          ls -lh *.bin bootloader/*.bin partition_table/*.bin 2>/dev/null || true
+          # 合并所有bin为一个merged-binary.bin，从地址0x0开始
+          python -m esptool --chip esp32s3 merge_bin \
+            --output merged-binary.bin \
+            0x0    bootloader/bootloader.bin \
+            0x8000 partition_table/partition-table.bin \
+            0xd000 ota_data_initial.bin \
+            0x10000 srmodels/srmodels.bin \
+            0x20000 xiaozhi.bin || \
+          python -m esptool --chip esp32s3 merge_bin \
+            --output merged-binary.bin \
+            0x0    bootloader/bootloader.bin \
+            0x8000 partition_table/partition-table.bin \
+            0xd000 ota_data_initial.bin \
+            0x20000 xiaozhi.bin
+          echo "=== Merged binary ==="
+          ls -lh merged-binary.bin
 
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
           name: xiaozhi-music-bread-compact-wifi-s3cam
-          path: |
-            build/xiaozhi.bin
-            build/bootloader/bootloader.bin
-            build/partition_table/partition-table.bin
-            build/ota_data_initial.bin
+          path: build/merged-binary.bin
           retention-days: 30
