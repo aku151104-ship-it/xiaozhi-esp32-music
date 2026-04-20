@@ -1,0 +1,35 @@
+name: Build bread-compact-wifi-s3cam
+
+on:
+  workflow_dispatch:
+
+  jobs:
+    build:
+        runs-on: ubuntu-22.04
+            steps:
+                  - name: Checkout source
+                          uses: actions/checkout@v4
+                                  with:
+                                            submodules: recursive
+
+                                                  - name: Setup ESP-IDF
+                                                          uses: espressif/esp-idf-ci-action@v1
+                                                                  with:
+                                                                            esp_idf_version: v5.4.1
+                                                                                      target: esp32s3
+                                                                                                command: >
+                                                                                                            idf.py
+                                                                                                                        -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3"
+                                                                                                                                    -DCONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_S3CAM=y
+                                                                                                                                                build
+                                                                                                                                                
+                                                                                                                                                      - name: Upload firmware
+                                                                                                                                                              uses: actions/upload-artifact@v4
+                                                                                                                                                                      with:
+                                                                                                                                                                                name: xiaozhi-music-bread-compact-wifi-s3cam
+                                                                                                                                                                                          path: |
+                                                                                                                                                                                                      build/xiaozhi-esp32.bin
+                                                                                                                                                                                                                  build/bootloader/bootloader.bin
+                                                                                                                                                                                                                              build/partition_table/partition-table.bin
+                                                                                                                                                                                                                                          build/ota_data_initial.bin
+                                                                                                                                                                                                                                                    retention-days: 30
