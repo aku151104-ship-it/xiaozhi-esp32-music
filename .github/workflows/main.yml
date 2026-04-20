@@ -33,19 +33,17 @@ jobs:
           idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3" build
           echo "=== Build output files ==="
           ls -lh build/*.bin build/bootloader/*.bin build/partition_table/*.bin build/srmodels/ 2>/dev/null || true
+          echo "=== flash_args ==="
+          cat build/flash_args 2>/dev/null || true
 
       - name: Merge binaries
         run: |
           . ~/esp-idf/export.sh
           cd build
-          # 尝试含srmodels合并，失败则不含srmodels
-          if [ -f srmodels/srmodels.bin ]; then
-            echo "Found srmodels.bin, merging with it"
-            python -m esptool --chip esp32s3 merge_bin               --output merged-binary.bin               0x0    bootloader/bootloader.bin               0x8000 partition_table/partition-table.bin               0xd000 ota_data_initial.bin               0x10000 srmodels/srmodels.bin               0x20000 xiaozhi.bin
-          else
-            echo "No srmodels.bin, merging without it"
-            python -m esptool --chip esp32s3 merge_bin               --output merged-binary.bin               0x0    bootloader/bootloader.bin               0x8000 partition_table/partition-table.bin               0xd000 ota_data_initial.bin               0x20000 xiaozhi.bin
-          fi
+          echo "=== Using flash_args for merge ==="
+          cat flash_args
+          # 用 esptool merge_bin 配合 @flash_args 自动处理所有地址
+          python -m esptool --chip esp32s3 merge_bin --output merged-binary.bin @flash_args
           echo "=== Merged binary size ==="
           ls -lh merged-binary.bin
 
