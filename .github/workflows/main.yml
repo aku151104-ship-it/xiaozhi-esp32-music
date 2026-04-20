@@ -35,7 +35,7 @@ jobs:
         with:
           name: xiaozhi-music-bread-compact-wifi-s3cam
           path: |
-            build/xiaozhi-esp32.bin
+            build/xiaozhi.bin
             build/bootloader/bootloader.bin
             build/partition_table/partition-table.bin
             build/ota_data_initial.bin
